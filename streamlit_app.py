@@ -77,6 +77,24 @@ for i, card in enumerate(cards):
         st.session_state.current_index = i
         st.session_state.flipped = False
 
+# ✅ PDF 추가
+st.markdown("---")
+st.markdown("### 📄 문제 추가하기 - PDF 파일")
+
+with st.container():
+    st.info("PDF 파일을 업로드하면 문제와 정답을 자동으로 추출할 수 있습니다. (이미지도 지원 예정)")
+
+    uploaded_pdf = st.file_uploader(
+        "📤 PDF 파일 업로드",
+        type=["pdf"],
+        accept_multiple_files=False,
+        help="기출문제가 담긴 PDF 파일을 업로드하세요."
+    )
+
+    if uploaded_pdf:
+        st.success(f"✅ 업로드 완료: `{uploaded_pdf.name}`")
+        st.caption("🔧 추출 처리는 아직 구현되지 않았습니다. 추후 텍스트 및 이미지 자동 인식 기능이 추가됩니다.")
+
 # ✅ 문제 수동 추가
 st.markdown("---")
 st.markdown("### ✏️ 문제 수동 추가")
