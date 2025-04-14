@@ -33,8 +33,6 @@ st.caption(f"진행률: {reviewed_count} / {len(cards)}")
 # ✅ 카드 표시
 with st.container():
     st.markdown("### 📘 문제")
-
-    # 문제와 버튼을 모두 하나의 HTML 블록 안에 넣기
     st.markdown(f"""
     <div style='
         border: 1px solid #ddd;
