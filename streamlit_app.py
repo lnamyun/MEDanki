@@ -71,12 +71,22 @@ if st.session_state.flipped:
 
 # ✅ 카드 넘기기
 col1, col2 = st.columns(2)
-if col1.button("⬅ 이전", disabled=current_index == 0):
+
+# 버튼 클릭 처리 플래그
+prev_clicked = col1.button("⬅ 이전")
+next_clicked = col2.button("다음 ➡")
+
+# 안전한 인덱스 처리
+if prev_clicked and st.session_state.current_index > 0:
     st.session_state.current_index -= 1
     st.session_state.flipped = False
-if col2.button("다음 ➡", disabled=current_index == len(cards) - 1):
+
+if next_clicked and st.session_state.current_index < len(cards) - 1:
     st.session_state.current_index += 1
     st.session_state.flipped = False
+
+# 카드 인덱스가 범위를 벗어나지 않도록 보정 (예외 방지)
+st.session_state.current_index = max(0, min(st.session_state.current_index, len(cards) - 1))
 
 # ✅ 문제 목록
 st.markdown("---")
