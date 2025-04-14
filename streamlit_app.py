@@ -32,14 +32,25 @@ st.caption(f"진행률: {reviewed_count} / {len(cards)}")
 
 # ✅ 카드 표시
 with st.container():
-    st.markdown("### " + ("문제" if not st.session_state.flipped else "정답 및 해설"))
+    st.markdown("### 📘 문제")
 
-    if st.session_state.flipped:
-        st.markdown(current_card["answer"], unsafe_allow_html=True)
-        st.button("⬅ 문제로 돌아가기", on_click=lambda: st.session_state.update(flipped=False))
-    else:
-        st.markdown(current_card["question"], unsafe_allow_html=True)
-        st.button("정답 보기 ➡", on_click=lambda: st.session_state.update(flipped=True))
+    # 문제와 버튼을 모두 하나의 HTML 블록 안에 넣기
+    st.markdown(f"""
+    <div style='
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 20px;
+        background-color: #fefefe;
+        margin-bottom: 20px;
+        font-size: 15px;
+    '>
+        <div style="font-size: 1.1rem; margin-bottom: 20px;">
+            {current_card["answer"] if st.session_state.flipped else current_card["question"]}
+        </div>
+        <form action="" method="post">
+        </form>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ✅ 난이도 평가
 if st.session_state.flipped:
