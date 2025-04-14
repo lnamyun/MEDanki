@@ -49,8 +49,13 @@ with st.container():
         </div>
         <form action="" method="post">
         </form>
-    </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
+    
+if st.session_state.flipped:
+    st.button("⬅ 문제로 돌아가기", on_click=lambda: st.session_state.update(flipped=False))
+else:
+    st.button("정답 보기 ➡", on_click=lambda: st.session_state.update(flipped=True))
 
 # ✅ 난이도 평가
 if st.session_state.flipped:
