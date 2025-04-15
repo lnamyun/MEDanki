@@ -1,4 +1,6 @@
 import streamlit as st
+import os
+from logic import extract_text_and_images_from_pdf
 
 # ✅ 세션 상태 초기화
 if "cards" not in st.session_state:
@@ -163,7 +165,7 @@ st.markdown("---")
 st.markdown("### 📄 문제 추가하기 - PDF 파일")
 
 with st.container():
-    st.info("PDF 파일을 업로드하면 문제와 정답을 자동으로 추출할 수 있습니다. (이미지도 지원 예정)")
+    st.info("PDF 파일을 업로드하면 문제와 정답을 자동으로 추출할 수 있습니다.")
 
     uploaded_pdf = st.file_uploader(
         "📤 PDF 파일 업로드",
@@ -173,8 +175,21 @@ with st.container():
     )
 
     if uploaded_pdf:
-        st.success(f"✅ 업로드 완료: `{uploaded_pdf.name}`")
-        st.caption("🔧 추출 처리는 아직 구현되지 않았습니다. 추후 텍스트 및 이미지 자동 인식 기능이 추가됩니다.")
+        st.success(f"✅ 업로드 완료: `{uploaded_pdf.name}`")      
+    if uploaded_pdf is not None:
+        temp_path = os.path.join("temp", uploaded_pdf.name)
+        os.makedirs("temp", exist_ok=True)
+        
+        # 업로드된 PDF 파일 저장
+        with open(temp_path, "wb") as f:
+            f.write(uploaded_pdf.getbuffer())
+
+        # 텍스트와 이미지 분리 처리
+        with st.spinner("PDF 처리 중..."):
+            texts, images = extract_text_and_images_from_pdf(temp_path)
+
+        st.success("PDF 처리 완료!")
+        
 
 # ✅ 문제 수동 추가
 st.markdown("---")
