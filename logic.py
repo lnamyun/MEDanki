@@ -1,1 +1,14 @@
-#anki
+from unstructured.partition.pdf import partition_pdf
+import os
+def extract_text_and_images_from_pdf(pdf_path, output_dir="extracted"):
+    elements = partition_pdf(
+        filename=pdf_path,
+        extract_images_in_pdf=True,
+        output_image_dir_path=output_dir
+    )
+
+    # 텍스트와 이미지 정보 분리
+    texts = [el.text for el in elements if el.text]
+    images = [el.metadata.image_path for el in elements if hasattr(el.metadata, 'image_path') and el.metadata.image_path]
+
+    return texts, images
