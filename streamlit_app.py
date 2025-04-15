@@ -19,71 +19,129 @@ if "cards" not in st.session_state:
     st.session_state.current_index = 0
     st.session_state.flipped = False
 
+# ✅ animate_slide 속성 초기화
+if "animate_slide" not in st.session_state:
+    st.session_state.animate_slide = True  # 슬라이드 애니메이션 트리거
+
 cards = st.session_state.cards
 current_index = st.session_state.current_index
 current_card = cards[current_index]
 
 st.title("🧠 MEDanki")
 
-# ✅ 진행률 표시
-reviewed_count = sum(card["reviewed"] for card in cards)
-st.progress(reviewed_count / len(cards) if cards else 0)
-st.caption(f"진행률: {reviewed_count} / {len(cards)}")
+# ✅ CSS 추가 (카드 스타일 및 애니메이션)
+st.markdown("""
+    <style>
+    .card-container {
+        perspective: 1000px;
+        animation: slide-in 0.5s ease-out;
+    }
+    .card {
+        width: 100%;
+        max-width: 400px;
+        height: 200px;
+        margin: 20px auto;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+    }
+    .card.flipped {
+        transform: rotateY(180deg);
+    }
+    .card-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        font-size: 15px;
+        background-color: #fefefe;
+    }
+    .card-face.back {
+        transform: rotateY(180deg);
+    }
+    @keyframes slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # ✅ 카드 표시
 with st.container():
     st.markdown("### 📘 문제")
-
-    st.markdown("""
-    <div style='
-        border: 1px solid #ddd;
-        border-radius: 12px;
-        padding: 20px;
-        background-color: #fefefe;
-        margin-bottom: 20px;
-        font-size: 15px;
-    '>
+    # 슬라이드 애니메이션 클래스 추가
+    slide_class = "slide-in" if st.session_state.animate_slide else ""
+    card_class = "card flipped" if st.session_state.flipped else "card"
+    st.markdown(f"""
+    <div class="card-container {slide_class}">
+        <div class="{card_class}">
+            <div class="card-face front">
+                {current_card["question"]}
+            </div>
+            <div class="card-face back">
+                {current_card["answer"]}
+            </div>
+        </div>
+    </div>
     """, unsafe_allow_html=True)
-
-    st.markdown(
-        current_card["answer"] if st.session_state.flipped else current_card["question"],
-        unsafe_allow_html=True
-    )
 
     # 버튼 동작 즉시 반영되도록 rerun 사용
     if st.button("⬅ 문제로 돌아가기" if st.session_state.flipped else "정답 보기 ➡"):
         st.session_state.flipped = not st.session_state.flipped
+        st.session_state.animate_slide = False  # 뒤집기 시 슬라이드 애니메이션 비활성화
         st.rerun()
 
-    # 난이도 평가 (정답 본 후만)
-    if st.session_state.flipped:
-        st.markdown("<hr>", unsafe_allow_html=True)
-        st.markdown("**이 문제의 난이도는 어땠나요?**")
+# ✅ 난이도 평가 함수 수정
+def rate_and_next(difficulty):
+    current_card["difficulty"] = difficulty
+    current_card["reviewed"] = True
+    if st.session_state.current_index < len(cards) - 1:
+        st.session_state.current_index += 1  # 다음 문제로 이동
+    st.session_state.flipped = False
+    st.session_state.animate_slide = True  # 슬라이드 애니메이션 활성화
+    st.session_state.trigger_rerun = True  # 상태 변수로 rerun 트리거
 
-        col1, col2, col3 = st.columns(3)
+# ✅ 난이도 평가 버튼
+if st.session_state.flipped:
+    st.markdown("<hr>", unsafe_allow_html=True)
+    st.markdown("**이 문제의 난이도는 어땠나요?**")
 
-        def rate(difficulty):
-            current_card["difficulty"] = difficulty
-            current_card["reviewed"] = True
-            st.session_state.flipped = False
-            st.rerun()
+    col1, col2, col3 = st.columns(3)
 
-        col1.button("😄 쉬움", on_click=lambda: rate(1))
-        col2.button("😐 보통", on_click=lambda: rate(2))
-        col3.button("😵 어려움", on_click=lambda: rate(3))
+    col1.button("😄 쉬움", on_click=lambda: rate_and_next(1))
+    col2.button("😐 보통", on_click=lambda: rate_and_next(2))
+    col3.button("😵 어려움", on_click=lambda: rate_and_next(3))
 
-    st.markdown("</div>", unsafe_allow_html=True)
+# ✅ rerun 트리거 처리
+if "trigger_rerun" in st.session_state and st.session_state.trigger_rerun:
+    st.session_state.trigger_rerun = False  # 트리거 초기화
+    st.rerun()
 
 # ✅ 카드 넘기기
 col1, col2 = st.columns(2)
 if col1.button("⬅ 이전", disabled=current_index == 0):
     st.session_state.current_index -= 1
     st.session_state.flipped = False
+    st.session_state.animate_slide = True  # 슬라이드 애니메이션 활성화
     st.rerun()
 
 if col2.button("다음 ➡", disabled=current_index == len(cards) - 1):
     st.session_state.current_index += 1
     st.session_state.flipped = False
+    st.session_state.animate_slide = True  # 슬라이드 애니메이션 활성화
     st.rerun()
 
 # ✅ 문제 목록
