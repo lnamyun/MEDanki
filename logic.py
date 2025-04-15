@@ -5,7 +5,7 @@ from pdf2image import convert_from_path
 
 images = convert_from_path(
     pdf_path,
-    poppler_path="/usr/bin"  # 또는 "/usr/local/bin"으로 바꿔서 시도 가능
+    poppler_path="/usr/local/bin"  # 또는 "/usr/local/bin"으로 바꿔서 시도 가능
 )
 
 def extract_text_and_images_from_pdf(pdf_path, output_dir="extracted"):
