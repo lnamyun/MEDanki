@@ -1,2 +1,4 @@
 streamlit
 unstructured[all-docs]
+unstructured-inference
+opencv-python-headless
