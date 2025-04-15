@@ -1,6 +1,6 @@
 import streamlit as st
 
-# 초기 카드 목록 설정
+# ✅ 세션 상태 초기화
 if "cards" not in st.session_state:
     st.session_state.cards = [
         {
@@ -33,7 +33,8 @@ st.caption(f"진행률: {reviewed_count} / {len(cards)}")
 # ✅ 카드 표시
 with st.container():
     st.markdown("### 📘 문제")
-    st.markdown(f"""
+
+    st.markdown("""
     <div style='
         border: 1px solid #ddd;
         border-radius: 12px;
@@ -42,51 +43,48 @@ with st.container():
         margin-bottom: 20px;
         font-size: 15px;
     '>
-        <div style="font-size: 1.1rem; margin-bottom: 20px;">
-            {current_card["answer"] if st.session_state.flipped else current_card["question"]}
-        </div>
-        <form action="" method="post">
-        </form>
-</div>
-""", unsafe_allow_html=True)
-    
-if st.session_state.flipped:
-    st.button("⬅ 문제로 돌아가기", on_click=lambda: st.session_state.update(flipped=False))
-else:
-    st.button("정답 보기 ➡", on_click=lambda: st.session_state.update(flipped=True))
+    """, unsafe_allow_html=True)
 
-# ✅ 난이도 평가
-if st.session_state.flipped:
-    st.markdown("**이 문제의 난이도는 어땠나요?**")
-    col1, col2, col3 = st.columns(3)
+    st.markdown(
+        current_card["answer"] if st.session_state.flipped else current_card["question"],
+        unsafe_allow_html=True
+    )
 
-    def rate(difficulty):
-        current_card["difficulty"] = difficulty
-        current_card["reviewed"] = True
-        st.session_state.flipped = False
+    # 버튼 동작 즉시 반영되도록 rerun 사용
+    if st.button("⬅ 문제로 돌아가기" if st.session_state.flipped else "정답 보기 ➡"):
+        st.session_state.flipped = not st.session_state.flipped
+        st.rerun()
 
-    col1.button("😄 쉬움", on_click=lambda: rate(1))
-    col2.button("😐 보통", on_click=lambda: rate(2))
-    col3.button("😵 어려움", on_click=lambda: rate(3))
+    # 난이도 평가 (정답 본 후만)
+    if st.session_state.flipped:
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("**이 문제의 난이도는 어땠나요?**")
+
+        col1, col2, col3 = st.columns(3)
+
+        def rate(difficulty):
+            current_card["difficulty"] = difficulty
+            current_card["reviewed"] = True
+            st.session_state.flipped = False
+            st.rerun()
+
+        col1.button("😄 쉬움", on_click=lambda: rate(1))
+        col2.button("😐 보통", on_click=lambda: rate(2))
+        col3.button("😵 어려움", on_click=lambda: rate(3))
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ✅ 카드 넘기기
 col1, col2 = st.columns(2)
-
-# 버튼 클릭 처리 플래그
-prev_clicked = col1.button("⬅ 이전")
-next_clicked = col2.button("다음 ➡")
-
-# 안전한 인덱스 처리
-if prev_clicked and st.session_state.current_index > 0:
+if col1.button("⬅ 이전", disabled=current_index == 0):
     st.session_state.current_index -= 1
     st.session_state.flipped = False
+    st.rerun()
 
-if next_clicked and st.session_state.current_index < len(cards) - 1:
+if col2.button("다음 ➡", disabled=current_index == len(cards) - 1):
     st.session_state.current_index += 1
     st.session_state.flipped = False
-
-# 카드 인덱스가 범위를 벗어나지 않도록 보정 (예외 방지)
-st.session_state.current_index = max(0, min(st.session_state.current_index, len(cards) - 1))
+    st.rerun()
 
 # ✅ 문제 목록
 st.markdown("---")
@@ -100,6 +98,7 @@ for i, card in enumerate(cards):
     if st.button(f"{label} ({diff} / {status})", key=f"goto_{i}"):
         st.session_state.current_index = i
         st.session_state.flipped = False
+        st.rerun()
 
 # ✅ PDF 추가
 st.markdown("---")
@@ -137,5 +136,6 @@ with st.form("manual_add"):
                 "reviewed": False
             })
             st.success("✅ 문제가 추가되었습니다!")
+            st.rerun()
         else:
             st.warning("⚠️ 문제와 정답을 모두 입력해주세요.")
